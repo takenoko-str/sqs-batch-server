@@ -7,11 +7,11 @@ import sys
 import boto3
 import random
 import argparse
-from setting import *
+from settings import *
 
 
 class SQS:
-    SQS_URL = os.environ['SQS_URL']
+    SQS_URL = os.environ.get('SQS_URL')
 
     def __init__(self, url):
         self.url = url
@@ -42,7 +42,7 @@ class SQS:
 
 
 class S3:
-    S3_BUCKET = os.environ['S3_BUCKET']
+    S3_BUCKET = os.environ.get('S3_BUCKET')
 
     def __init__(self, s3_bucket):
         self.s3 = boto3.client('s3', region_name='ap-northeast-1')
