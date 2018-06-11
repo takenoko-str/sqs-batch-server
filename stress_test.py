@@ -16,7 +16,8 @@ IMAGE_PATH = "beagle.png"
 # the sleep amount between requests
 NUM_REQUESTS = 500
 SLEEP_COUNT = 0.05
- 
+
+
 def call_predict_endpoint(n):
     # load the input image and construct the payload for the request
     with open(IMAGE_PATH, "rb") as f:
@@ -24,18 +25,15 @@ def call_predict_endpoint(n):
         payload = {"image": image}
  
     # submit the request
-    try:
-        r = requests.post(KERAS_REST_API_URL, files=payload).json()
-        # ensure the request was sucessful
-        if r["success"]:
-            print("[INFO] thread {} OK".format(n))
-            print(r["predictions"])
-     
-        # otherwise, the request failed
-        else:
-            print("[INFO] thread {} FAILED".format(n))
-    except json.decoder.JSONDecodeError:
-        print(r.content)
+    r = requests.post(KERAS_REST_API_URL, files=payload).json()
+ 
+    # ensure the request was successful
+    if r["success"]:
+        print("[INFO] thread {} OK".format(n))
+ 
+    # otherwise, the request failed
+    else:
+        print("[INFO] thread {} FAILED".format(n))
  
 # loop over the number of threads
 for i in range(0, NUM_REQUESTS):
