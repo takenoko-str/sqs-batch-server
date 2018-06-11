@@ -10,7 +10,8 @@ import json
  
 # connect to Redis server
 db = redis.StrictRedis(host=settings.REDIS_HOST,
-    port=settings.REDIS_PORT, db=settings.REDIS_DB)
+                       port=settings.REDIS_PORT, 
+                       db=settings.REDIS_DB)
  
 def classify_process():
     # load the pre-trained Keras model (here we are using a model
@@ -25,7 +26,7 @@ def classify_process():
         # attempt to grab a batch of images from the database, then
         # initialize the image IDs and batch of images themselves
         queue = db.lrange(settings.IMAGE_QUEUE, 0,
-            settings.BATCH_SIZE - 1)
+                          settings.BATCH_SIZE - 1)
         imageIDs = []
         batch = None
  
@@ -34,9 +35,10 @@ def classify_process():
             # deserialize the object and obtain the input image
             q = json.loads(q.decode("utf-8"))
             image = helpers.base64_decode_image(q["image"],
-                settings.IMAGE_DTYPE,
-                (1, settings.IMAGE_HEIGHT, settings.IMAGE_WIDTH,
-                    settings.IMAGE_CHANS))
+                                                settings.IMAGE_DTYPE,
+                                                (1, settings.IMAGE_HEIGHT, 
+                                                    settings.IMAGE_WIDTH,
+                                                    settings.IMAGE_CHANS))
  
             # check to see if the batch list is None
             if batch is None:
@@ -82,3 +84,4 @@ def classify_process():
 # process
 if __name__ == "__main__":
     classify_process()
+
