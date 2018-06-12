@@ -29,6 +29,7 @@ def call_predict_endpoint(n):
     # ensure the request was successful
     if r["success"]:
         print("[INFO] thread {} OK".format(n))
+        print(r["predictions"])
 
     # otherwise, the request failed
     else:
