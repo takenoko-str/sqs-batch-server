@@ -2,7 +2,6 @@
 
 import os
 import os.path as op
-import cv2
 import sys
 import boto3
 import random
@@ -33,9 +32,12 @@ class SQS:
     def delete(self, num_messages=1):
         i = 0
         while i < num_messages:
+            if self.messages == []:
+                break
             msg = self.messages.pop(0)
             if msg.get('Messages'):
-                self.sqs.delete_message(QueueUrl=self.url, ReceiptHandle=msg['Messages'][0]['ReceiptHandle'])
+                for q in msg['Messages']:
+                    self.sqs.delete_message(QueueUrl=self.url, ReceiptHandle=q['ReceiptHandle'])
             else:
                 print("Queue is now empty")
             i += 1
@@ -57,4 +59,33 @@ class S3:
 
     def download(self, src_file_path, dst_file_path):
         return self.s3.download_file(self.s3_bucket, src_file_path, dst_file_path)
+
+    def put(self, key, body):
+        self.s3.put_object(Body=body, Bucket=self.s3_bucket, Key=key)
+
+    def get(self, key):
+        return self.s3.get_object(Bucket=self.s3_bucket, Key=key)['Body'].read()
+
+
+def s3_example(key):
+    x = S3.sample()
+    y = x.get(key)
+    print(y['Body'].read().decode('utf-8'))
+
+
+def sqs_example():
+    x = SQS.sample()
+    y = []
+    for i in range(3):
+        y.append(x.receive(10))
+    print(y)
+
+
+def main():
+    # s3_example("hoge")
+    sqs_example()
+
+
+if __name__ == '__main__':
+    main()
 

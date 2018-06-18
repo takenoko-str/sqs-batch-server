@@ -7,12 +7,17 @@ import helpers
 import redis
 import time
 import json
+import os
+from aws_handler import SQS, S3
+
  
 # connect to Redis server
 db = redis.StrictRedis(host=settings.REDIS_HOST,
                        port=settings.REDIS_PORT, 
                        db=settings.REDIS_DB)
- 
+sqs = SQS(os.environ['SQS_JSON_PUT'])
+s3 = S3.sample()
+
 def classify_process():
     # load the pre-trained Keras model (here we are using a model
     # pre-trained on ImageNet and provided by Keras, but you can
@@ -25,8 +30,22 @@ def classify_process():
     while True:
         # attempt to grab a batch of images from the database, then
         # initialize the image IDs and batch of images themselves
-        queue = db.lrange(settings.IMAGE_QUEUE, 0,
-                          settings.BATCH_SIZE - 1)
+        
+        if settings.DB_NAME == 's3':
+            response = sqs.receive(10)
+            if not response.get('Messages'):
+                continue
+            messages = response['Messages']
+            queue = []
+            for msg in messages:
+                s3_path = msg['Body']
+                data = s3.get(s3_path)
+                queue.append(data)
+
+        if settings.DB_NAME == 'redis':    
+            queue = db.lrange(settings.IMAGE_QUEUE, 0,
+                              settings.BATCH_SIZE - 1)
+        
         imageIDs = []
         batch = None
  
@@ -72,11 +91,17 @@ def classify_process():
  
                 # store the output predictions in the database, using
                 # the image ID as the key so we can fetch the results
-                db.set(imageID, json.dumps(output))
- 
+                # SQSに渡せそうなところ
+                if settings.DB_NAME == 'redis':   
+                    db.set(imageID, json.dumps(output))
+                if settings.DB_NAME == 's3':
+                    s3.set(imageID, json.dumps(output))
+            # SQSに渡せそうなところ
             # remove the set of images from our queue
-            db.ltrim(settings.IMAGE_QUEUE, len(imageIDs), -1)
- 
+            if settings.DB_NAME == 'redis':
+                db.ltrim(settings.IMAGE_QUEUE, len(imageIDs), -1)
+            if settings.DB_NAME == 's3':
+                sqs.delete(len(imageIDs) - 1)
         # sleep for a small amount
         time.sleep(settings.SERVER_SLEEP)
  

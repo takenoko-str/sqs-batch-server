@@ -2,6 +2,7 @@
 from keras.preprocessing.image import img_to_array
 from keras.applications import imagenet_utils
 from PIL import Image
+from aws_handler import S3, SQS
 import numpy as np
 import settings
 import helpers
@@ -11,13 +12,17 @@ import uuid
 import time
 import json
 import io
- 
+import os
+
 # initialize our Flask application and Redis server
 app = flask.Flask(__name__)
 db = redis.StrictRedis(host=settings.REDIS_HOST,
                        port=settings.REDIS_PORT, 
                        db=settings.REDIS_DB)
- 
+s3 = S3.sample()
+sqs = SQS(os.environ['SQS_S3_PUT'])
+
+
 def prepare_image(image, target):
     # if the image mode is not RGB, convert it
     if image.mode != "RGB":
@@ -50,7 +55,8 @@ def predict():
             image = flask.request.files["image"].read()
             image = Image.open(io.BytesIO(image))
             image = prepare_image(image,
-                (settings.IMAGE_WIDTH, settings.IMAGE_HEIGHT))
+                                  (settings.IMAGE_WIDTH, 
+                                   settings.IMAGE_HEIGHT))
  
             # ensure our NumPy array is C-contiguous as well,
             # otherwise we won't be able to serialize it
@@ -61,13 +67,25 @@ def predict():
             k = str(uuid.uuid4())
             image = helpers.base64_encode_image(image)
             d = {"id": k, "image": image}
-            db.rpush(settings.IMAGE_QUEUE, json.dumps(d))
- 
+
+            if settings.DB_NAME == 'redis':
+                db.rpush(settings.IMAGE_QUEUE, json.dumps(d))
+
+            if settings.DB_NAME == 's3':
+                # key名はUUIDではなくてリクエスト先の名前を使いたい
+                s3.put(k, json.dumps(d))
+                sqs.send(k)
+
             # keep looping until our model server returns the output
             # predictions
             while True:
                 # attempt to grab the output predictions
-                output = db.get(k)
+                # SQSに渡せそうなところ
+                if settings.DB_NAME == 'redis':
+                    output = db.get(k)
+                # TODO: 自分が飛ばしたリクエストとどうやって紐付ければいいんだろ？
+                if settings.DB_NAME == 's3':
+                    output = s3.get(k)
  
                 # check to see if our model has classified the input
                 # image
@@ -79,7 +97,8 @@ def predict():
  
                     # delete the result from the database and break
                     # from the polling loop
-                    db.delete(k)
+                    if settings.DB_NAME == 'redis':
+                        db.delete(k)
                     break
  
                 # sleep for a small amount to give the model a chance
