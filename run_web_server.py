@@ -27,26 +27,28 @@ def prepare_image(image, target):
     # if the image mode is not RGB, convert it
     if image.mode != "RGB":
         image = image.convert("RGB")
- 
-    # resize the input image and preprocess it
+
+    # resize the input image and pre-process it
     image = image.resize(target)
     image = img_to_array(image)
     image = np.expand_dims(image, axis=0)
     image = imagenet_utils.preprocess_input(image)
- 
+
     # return the processed image
     return image
- 
+
+
 @app.route("/")
 def homepage():
     return "Welcome to the PyImageSearch Keras REST API!"
- 
+
+
 @app.route("/predict", methods=["POST"])
 def predict():
     # initialize the data dictionary that will be returned from the
     # view
     data = {"success": False}
- 
+
     # ensure an image was properly uploaded to our endpoint
     if flask.request.method == "POST":
         if flask.request.files.get("image"):
@@ -57,11 +59,11 @@ def predict():
             image = prepare_image(image,
                                   (settings.IMAGE_WIDTH, 
                                    settings.IMAGE_HEIGHT))
- 
+
             # ensure our NumPy array is C-contiguous as well,
             # otherwise we won't be able to serialize it
             image = image.copy(order="C")
- 
+
             # generate an ID for the classification then add the
             # classification ID + image to the queue
             k = str(uuid.uuid4())
@@ -94,23 +96,23 @@ def predict():
                     # dictionary so we can return it to the client
                     output = output.decode("utf-8")
                     data["predictions"] = json.loads(output)
- 
+
                     # delete the result from the database and break
                     # from the polling loop
                     if settings.DB_NAME == 'redis':
                         db.delete(k)
                     break
- 
+
                 # sleep for a small amount to give the model a chance
                 # to classify the input image
                 time.sleep(settings.CLIENT_SLEEP)
- 
+
             # indicate that the request was a success
             data["success"] = True
- 
+
     # return the data dictionary as a JSON response
     return flask.jsonify(data)
- 
+
 # for debugging purposes, it's helpful to start the Flask testing
 # server (don't use this for production
 if __name__ == "__main__":
