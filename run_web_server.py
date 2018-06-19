@@ -66,29 +66,26 @@ def predict():
 
             # generate an ID for the classification then add the
             # classification ID + image to the queue
-            k = str(uuid.uuid4())
+            imageID = str(uuid.uuid4())
             image = helpers.base64_encode_image(image)
-            d = {"id": k, "image": image}
-
-            if settings.DB_NAME == 'redis':
-                db.rpush(settings.IMAGE_QUEUE, json.dumps(d))
+            d = {"id": imageID, "image": image}
 
             if settings.DB_NAME == 's3':
                 # key名はUUIDではなくてリクエスト先の名前を使いたい
-                s3.put(k, json.dumps(d))
-                sqs.send(k)
+                s3.put(imageID, json.dumps(d))
+                sqs.send(imageID)
+            else:
+                db.rpush(settings.IMAGE_QUEUE, json.dumps(d))
 
             # keep looping until our model server returns the output
             # predictions
             while True:
                 # attempt to grab the output predictions
-                # SQSに渡せそうなところ
-                if settings.DB_NAME == 'redis':
-                    output = db.get(k)
-                # TODO: 自分が飛ばしたリクエストとどうやって紐付ければいいんだろ？
                 if settings.DB_NAME == 's3':
-                    output = s3.get(k)
- 
+                    output = s3.get(imageID)
+                else:
+                    output = db.get(imageID)
+
                 # check to see if our model has classified the input
                 # image
                 if output is not None:
@@ -99,9 +96,7 @@ def predict():
 
                     # delete the result from the database and break
                     # from the polling loop
-                    if settings.DB_NAME == 'redis':
-                        db.delete(k)
-                    break
+                    db.delete(imageID)
 
                 # sleep for a small amount to give the model a chance
                 # to classify the input image

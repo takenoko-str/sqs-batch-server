@@ -43,7 +43,7 @@ def classify_process():
                 data = s3.get(s3_path)
                 queue.append(data)
 
-        if settings.DB_NAME == 'redis':    
+        else:
             queue = db.lrange(settings.IMAGE_QUEUE, 0,
                               settings.BATCH_SIZE - 1)
         
@@ -92,17 +92,15 @@ def classify_process():
 
                 # store the output predictions in the database, using
                 # the image ID as the key so we can fetch the results
-                # SQSに渡せそうなところ
-                if settings.DB_NAME == 'redis':   
-                    db.set(imageID, json.dumps(output))
                 if settings.DB_NAME == 's3':
                     s3.set(imageID, json.dumps(output))
-            # SQSに渡せそうなところ
+                else:
+                    db.set(imageID, json.dumps(output))
             # remove the set of images from our queue
-            if settings.DB_NAME == 'redis':
-                db.ltrim(settings.IMAGE_QUEUE, len(imageIDs), -1)
             if settings.DB_NAME == 's3':
                 sqs.delete(len(imageIDs) - 1)
+            else:
+                db.ltrim(settings.IMAGE_QUEUE, len(imageIDs), -1)
         # sleep for a small amount
         time.sleep(settings.SERVER_SLEEP)
 
