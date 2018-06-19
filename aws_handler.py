@@ -1,11 +1,6 @@
 #!/usr/local/bin/python3
 
-import os
-import os.path as op
-import sys
 import boto3
-import random
-import argparse
 from settings import *
 
 
@@ -32,7 +27,7 @@ class SQS:
     def delete(self, num_messages=1):
         i = 0
         while i < num_messages:
-            if self.messages == []:
+            if not self.messages:
                 break
             msg = self.messages.pop(0)
             if msg.get('Messages'):
