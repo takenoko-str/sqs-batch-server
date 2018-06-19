@@ -20,7 +20,7 @@ db = redis.StrictRedis(host=settings.REDIS_HOST,
                        port=settings.REDIS_PORT, 
                        db=settings.REDIS_DB)
 s3 = S3.sample()
-sqs = SQS(os.environ['SQS_S3_PUT'])
+sqs = SQS.sample()
 
 
 def prepare_image(image, target):
