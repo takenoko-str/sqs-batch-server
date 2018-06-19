@@ -32,20 +32,18 @@ def classify_process():
         # attempt to grab a batch of images from the database, then
         # initialize the image IDs and batch of images themselves
         
-        if settings.DB_NAME == 's3':
-            response = sqs.receive(10)
-            if not response.get('Messages'):
-                continue
-            messages = response['Messages']
-            queue = []
-            for msg in messages:
-                s3_path = msg['Body']
-                data = s3.get(s3_path)
-                queue.append(data)
+        messages = sqs.receive(10)
+        queue = []
+        if not messages:
+            continue
 
-        else:
-            queue = db.lrange(settings.IMAGE_QUEUE, 0,
-                              settings.BATCH_SIZE - 1)
+        for msg in messages:
+            s3_path = msg['Body']
+            q = s3.get(s3_path)
+            queue.append(q)
+
+        #queue = db.lrange(settings.IMAGE_QUEUE, 0,
+        #                  settings.BATCH_SIZE - 1)
         
         imageIDs = []
         batch = None
@@ -60,52 +58,36 @@ def classify_process():
                                                     settings.IMAGE_WIDTH,
                                                     settings.IMAGE_CHANS))
 
-            # check to see if the batch list is None
             if batch is None:
                 batch = image
 
-            # otherwise, stack the data
             else:
                 batch = np.vstack([batch, image])
 
-            # update the list of image IDs
             imageIDs.append(q["id"])
 
-        # check to see if we need to process the batch
         if len(imageIDs) > 0:
-            # classify the batch
+
             print("* Batch size: {}".format(batch.shape))
             preds = model.predict(batch)
             results = imagenet_utils.decode_predictions(preds)
 
-            # loop over the image IDs and their corresponding set of
-            # results from our model
             for (imageID, resultSet) in zip(imageIDs, results):
-                # initialize the list of output predictions
+
                 output = []
 
-                # loop over the results and add them to the list of
-                # output predictions
                 for (imagenetID, label, prob) in resultSet:
                     r = {"label": label, "probability": float(prob)}
                     output.append(r)
 
-                # store the output predictions in the database, using
-                # the image ID as the key so we can fetch the results
-                if settings.DB_NAME == 's3':
-                    s3.set(imageID, json.dumps(output))
-                else:
-                    db.set(imageID, json.dumps(output))
-            # remove the set of images from our queue
-            if settings.DB_NAME == 's3':
-                sqs.delete(len(imageIDs) - 1)
-            else:
-                db.ltrim(settings.IMAGE_QUEUE, len(imageIDs), -1)
-        # sleep for a small amount
+                db.set(imageID, json.dumps(output))
+
+            #db.ltrim(settings.IMAGE_QUEUE, len(imageIDs), -1)
+        sqs.delete(messages)
+
         time.sleep(settings.SERVER_SLEEP)
 
-# if this is the main thread of execution start the model server
-# process
+
 if __name__ == "__main__":
     classify_process()
 
