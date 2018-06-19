@@ -70,21 +70,16 @@ def predict():
             image = helpers.base64_encode_image(image)
             d = {"id": imageID, "image": image}
 
-            if settings.DB_NAME == 's3':
-                # key名はUUIDではなくてリクエスト先の名前を使いたい
-                s3.put(imageID, json.dumps(d))
-                sqs.send(imageID)
-            else:
-                db.rpush(settings.IMAGE_QUEUE, json.dumps(d))
+            s3.put(imageID, json.dumps(d))
+            sqs.send(imageID)
+            #db.rpush(settings.IMAGE_QUEUE, json.dumps(d))
 
             # keep looping until our model server returns the output
             # predictions
             while True:
                 # attempt to grab the output predictions
-                if settings.DB_NAME == 's3':
-                    output = s3.get(imageID)
-                else:
-                    output = db.get(imageID)
+                #output = s3.get(imageID)
+                output = db.get(imageID)
 
                 # check to see if our model has classified the input
                 # image
@@ -97,6 +92,7 @@ def predict():
                     # delete the result from the database and break
                     # from the polling loop
                     db.delete(imageID)
+                    break
 
                 # sleep for a small amount to give the model a chance
                 # to classify the input image
