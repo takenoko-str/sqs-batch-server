@@ -11,7 +11,6 @@ import os
 from aws_handler import SQS, S3
 
 
-# connect to Redis server
 db = redis.StrictRedis(host=settings.REDIS_HOST,
                        port=settings.REDIS_PORT, 
                        db=settings.REDIS_DB)
@@ -20,17 +19,11 @@ s3 = S3.sample()
 
 
 def classify_process():
-    # load the pre-trained Keras model (here we are using a model
-    # pre-trained on ImageNet and provided by Keras, but you can
-    # substitute in your own networks just as easily)
     print("* Loading model...")
     model = ResNet50(weights="imagenet")
     print("* Model loaded")
 
-    # continually pool for new images to classify
     while True:
-        # attempt to grab a batch of images from the database, then
-        # initialize the image IDs and batch of images themselves
         
         messages = sqs.receive(10)
         queue = []
@@ -48,9 +41,8 @@ def classify_process():
         imageIDs = []
         batch = None
 
-        # loop over the queue
         for q in queue:
-            # deserialize the object and obtain the input image
+
             q = json.loads(q.decode("utf-8"))
             image = helpers.base64_decode_image(q["image"],
                                                 settings.IMAGE_DTYPE,
