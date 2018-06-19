@@ -20,23 +20,15 @@ class SQS:
         self.sqs.send_message(QueueUrl=self.url, MessageBody=body_message)
 
     def receive(self, num_messages=1):
-        message = self.sqs.receive_message(QueueUrl=self.url, MaxNumberOfMessages=num_messages)
-        self.messages.append(message)
-        return message
+        response = self.sqs.receive_message(QueueUrl=self.url, MaxNumberOfMessages=num_messages)
+        messages = response.get('Messages')
+        if messages:
+            self.messages += messages
+        return messages
 
-    def delete(self, num_messages=1):
-        i = 0
-        while i < num_messages:
-            if not self.messages:
-                break
-            msg = self.messages.pop(0)
-            if msg.get('Messages'):
-                for q in msg['Messages']:
-                    self.sqs.delete_message(QueueUrl=self.url, ReceiptHandle=q['ReceiptHandle'])
-            else:
-                print("Queue is now empty")
-            i += 1
-
+    def delete(self, messages):
+        for msg in messages:
+            self.sqs.delete_message(QueueUrl=self.url, ReceiptHandle=msg['ReceiptHandle'])
 
 class S3:
     S3_BUCKET = os.environ.get('S3_BUCKET')
