@@ -1,7 +1,7 @@
 #!/usr/local/bin/python3
 
 import boto3
-from settings import *
+import settings
 
 
 class SQS:
