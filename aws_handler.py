@@ -69,6 +69,27 @@ class S3:
         return self.s3.get_object(Bucket=self.s3_bucket, Key=key)['Body'].read()
 
 
+class EC2:
+    ec2 = boto3.client('ec2', region_name='ap-northeast-1')
+
+    def __init__(self, ids):
+        self.ids = ids
+
+    @classmethod
+    def describe(cls, filters, ids=[]):
+        response = cls.ec2.describe_instances(Filters=filters)
+        for reservation in response.get('Reservations', [{}]):
+            for instance in reservation.get('Instances', [{}]):
+                ids.append(instance.get('InstanceId'))
+        return cls(ids)
+
+    def start(self):
+        self.ec2.start_instances(InstanceIds=self.ids)
+
+    def stop(self):
+        self.ec2.stop_instances(InstanceIds=self.ids)
+
+
 def s3_example(key):
     x = S3.sample()
     y = x.get(key)
