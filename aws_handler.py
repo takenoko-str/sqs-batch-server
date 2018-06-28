@@ -90,6 +90,36 @@ class EC2:
         self.ec2.stop_instances(InstanceIds=self.ids)
 
 
+class SNS:
+    SNS_TOPIC_ARN = os.environ.get('SNS_TOPIC_ARN')
+
+    def __init__(self, topic_arn):
+        self.client = boto3.client('sns', region_name='ap-northeast-1')
+        self.topic_arn = topic_arn
+
+    @classmethod
+    def sample(cls):
+        return cls(cls.SNS_TOPIC_ARN)
+
+    def set_subscription(self, subscription_arn, model_name):
+        self.client.set_subscription_attributes(
+            SubscriptionArn=subscription_arn,
+            AttributeName='FilterPolicy',
+            AttributeValue='{"set_model": ["' + model_name + '"]}'
+        )
+
+    def publish(self, message, model_name):
+        message_attributes = {'set_model': {
+                                  'DataType': 'String',
+                                  'StringValue': model_name}
+                              }
+        self.client.publish(TopicArn=self.topic_arn,
+                            Subject='Test #1234',
+                            Message=message,
+                            MessageAttributes=message_attributes
+                            )
+
+
 def s3_example(key):
     x = S3.sample()
     y = x.get(key)
@@ -97,18 +127,25 @@ def s3_example(key):
 
 
 def sqs_example():
-    x = SQS.sample()
+    sqs = SQS.sample()
     y = []
     for i in range(3):
-        y.append(x.receive(10))
+        y.append(sqs.receive(10))
     print(y)
+
+
+def sns_example():
+    sns = SNS.sample()
+    sns.publish('Male, 33 years old', 'test')
 
 
 def main():
     # s3_example("hoge")
-    sqs_example()
+    # sqs_example()
+    sns_example()
 
 
 if __name__ == '__main__':
     main()
+
 
