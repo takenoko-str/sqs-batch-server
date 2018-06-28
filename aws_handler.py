@@ -32,6 +32,19 @@ class SQS:
         for msg in messages:
             self.sqs.delete_message(QueueUrl=self.url, ReceiptHandle=msg['ReceiptHandle'])
 
+    def message_size(self):
+        response = self.sqs.get_queue_attributes(
+            QueueUrl=self.url,
+            AttributeNames=['ApproximateNumberOfMessages']
+        )
+        attr = response.get('Attributes')
+        if attr is not None:
+            msg = attr['ApproximateNumberOfMessages']
+        else:
+            msg = ''
+        return msg
+
+
 class S3:
     S3_BUCKET = os.environ.get('S3_BUCKET')
 
