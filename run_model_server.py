@@ -31,7 +31,8 @@ def classify_process():
             continue
 
         for msg in messages:
-            s3_path = msg['Body']
+            body = json.loads(msg['Body'])
+            s3_path = body['Message']
             q = s3.get(s3_path)
             queue.append(q)
 
