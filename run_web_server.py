@@ -2,7 +2,7 @@
 from keras.preprocessing.image import img_to_array
 from keras.applications import imagenet_utils
 from PIL import Image
-from aws_handler import S3, SQS
+from aws_handler import S3, SQS, SNS
 import numpy as np
 import settings
 import helpers
@@ -20,6 +20,7 @@ db = redis.StrictRedis(host=settings.REDIS_HOST,
                        db=settings.REDIS_DB)
 s3 = S3.sample()
 sqs = SQS.sample()
+sns = SNS.sample()
 
 
 def prepare_image(image, target):
@@ -59,12 +60,13 @@ def predict():
             image = helpers.base64_encode_image(image)
             d = {"id": imageID, "image": image}
 
+            # db.rpush(settings.IMAGE_QUEUE, json.dumps(d))
             s3.put(imageID, json.dumps(d))
-            sqs.send(imageID)
-            #db.rpush(settings.IMAGE_QUEUE, json.dumps(d))
+            # sqs.send(imageID)
+            sns.publish(imageID, "imagenet")
 
             while True:
-                #output = s3.get(imageID)
+                # output = s3.get(imageID)
                 output = db.get(imageID)
 
                 if output is not None:
