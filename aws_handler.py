@@ -6,7 +6,7 @@ import settings
 
 
 class SQS:
-    SQS_URL = os.environ.get('SQS_URL')
+    URL = os.environ.get('SQS_URL')
 
     def __init__(self, url):
         self.url = url
@@ -15,7 +15,7 @@ class SQS:
 
     @classmethod
     def sample(cls):
-        return cls(cls.SQS_URL)
+        return cls(cls.URL)
 
     def send(self, body_message):
         self.sqs.send_message(QueueUrl=self.url, MessageBody=body_message)
@@ -46,27 +46,27 @@ class SQS:
 
 
 class S3:
-    S3_BUCKET = os.environ.get('S3_BUCKET')
+    BUCKET = os.environ.get('S3_BUCKET')
 
-    def __init__(self, s3_bucket):
+    def __init__(self, bucket):
         self.s3 = boto3.client('s3', region_name='ap-northeast-1')
-        self.s3_bucket = s3_bucket
+        self.bucket = bucket
 
     @classmethod
     def sample(cls):
-        return cls(cls.S3_BUCKET)
+        return cls(cls.BUCKET)
 
     def upload(self, src_file_path, dst_file_path):
-        self.s3.upload_file(src_file_path, self.s3_bucket, dst_file_path)
+        self.s3.upload_file(src_file_path, self.bucket, dst_file_path)
 
     def download(self, src_file_path, dst_file_path):
-        return self.s3.download_file(self.s3_bucket, src_file_path, dst_file_path)
+        return self.s3.download_file(self.bucket, src_file_path, dst_file_path)
 
     def put(self, key, body):
-        self.s3.put_object(Body=body, Bucket=self.s3_bucket, Key=key)
+        self.s3.put_object(Body=body, Bucket=self.bucket, Key=key)
 
     def get(self, key):
-        return self.s3.get_object(Bucket=self.s3_bucket, Key=key)['Body'].read()
+        return self.s3.get_object(Bucket=self.bucket, Key=key)['Body'].read()
 
 
 class EC2:
@@ -91,7 +91,7 @@ class EC2:
 
 
 class SNS:
-    SNS_TOPIC_ARN = os.environ.get('SNS_TOPIC_ARN')
+    TOPIC_ARN = os.environ.get('SNS_TOPIC_ARN')
 
     def __init__(self, topic_arn):
         self.client = boto3.client('sns', region_name='ap-northeast-1')
@@ -99,7 +99,7 @@ class SNS:
 
     @classmethod
     def sample(cls):
-        return cls(cls.SNS_TOPIC_ARN)
+        return cls(cls.TOPIC_ARN)
 
     def set_subscription(self, subscription_arn, model_name):
         self.client.set_subscription_attributes(
