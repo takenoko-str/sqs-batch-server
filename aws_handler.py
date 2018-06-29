@@ -41,7 +41,7 @@ class SQS:
         if attr is not None:
             msg = attr['ApproximateNumberOfMessages']
         else:
-            msg = ''
+            msg = '0'
         return msg
 
 
@@ -105,16 +105,17 @@ class SNS:
         self.client.set_subscription_attributes(
             SubscriptionArn=subscription_arn,
             AttributeName='FilterPolicy',
-            AttributeValue='{"set_model": ["' + model_name + '"]}'
+            AttributeValue='{"model": ["' + model_name + '"]}'
         )
 
     def publish(self, message, model_name):
-        message_attributes = {'set_model': {
+        subject = 'Test #1234'
+        message_attributes = {'model': {
                                   'DataType': 'String',
                                   'StringValue': model_name}
                               }
         self.client.publish(TopicArn=self.topic_arn,
-                            Subject='Test #1234',
+                            Subject=subject,
                             Message=message,
                             MessageAttributes=message_attributes
                             )
