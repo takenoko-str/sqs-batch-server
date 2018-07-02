@@ -12,7 +12,8 @@ import uuid
 import time
 import json
 import io
-import os
+import os.path as op
+from datetime import date
 
 app = flask.Flask(__name__)
 db = redis.StrictRedis(host=settings.REDIS_HOST,
@@ -61,9 +62,11 @@ def predict():
             d = {"id": imageID, "image": image}
 
             # db.rpush(settings.IMAGE_QUEUE, json.dumps(d))
-            s3.put(imageID, json.dumps(d))
+            today = str(date.today())
+            s3_path = op.join(today, imageID)
+            s3.put(s3_path, json.dumps(d))
             # sqs.send(imageID)
-            sns.publish(imageID, "imagenet")
+            sns.publish(s3_path, "imagenet")
 
             while True:
                 # output = s3.get(imageID)
