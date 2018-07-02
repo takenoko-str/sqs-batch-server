@@ -3,6 +3,7 @@
 import os
 import boto3
 import settings
+session = boto3.session.Session(region_name='ap-northeast-1')
 
 
 class SQS:
