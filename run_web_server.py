@@ -1,4 +1,3 @@
-# import the necessary packages
 from keras.preprocessing.image import img_to_array
 from keras.applications import imagenet_utils
 from PIL import Image
