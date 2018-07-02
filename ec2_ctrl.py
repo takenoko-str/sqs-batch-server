@@ -13,7 +13,6 @@ if __name__ == '__main__':
 
         if int(msg) > 0:
             try:
-
                 response = ec2.start()
             except botocore.exceptions.ClientError:
                 print("error")
