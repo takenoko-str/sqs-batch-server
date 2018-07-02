@@ -7,7 +7,6 @@ import helpers
 import redis
 import time
 import json
-import os
 from aws_handler import SQS, S3
 
 
@@ -36,8 +35,8 @@ def classify_process():
             q = s3.get(s3_path)
             queue.append(q)
 
-        #queue = db.lrange(settings.IMAGE_QUEUE, 0,
-        #                  settings.BATCH_SIZE - 1)
+        # queue = db.lrange(settings.IMAGE_QUEUE, 0,
+        #                   settings.BATCH_SIZE - 1)
         
         imageIDs = []
         batch = None
@@ -75,7 +74,7 @@ def classify_process():
 
                 db.set(imageID, json.dumps(output))
 
-            #db.ltrim(settings.IMAGE_QUEUE, len(imageIDs), -1)
+            # db.ltrim(settings.IMAGE_QUEUE, len(imageIDs), -1)
         sqs.delete(messages)
 
         time.sleep(settings.SERVER_SLEEP)
