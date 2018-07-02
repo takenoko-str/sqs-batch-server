@@ -46,8 +46,9 @@ def predict():
 
     if flask.request.method == "POST":
         if flask.request.files.get("image"):
-            image = flask.request.files["image"].read()
-            image = Image.open(io.BytesIO(image))
+            response = flask.request.files["image"]
+            data["filename"] = response.filename
+            image = Image.open(io.BytesIO(response.read()))
             image = prepare_image(image,
                                   (settings.IMAGE_WIDTH, 
                                    settings.IMAGE_HEIGHT))
