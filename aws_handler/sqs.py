@@ -6,6 +6,7 @@ import boto3
 
 class SQS:
     URL = os.environ.get('SQS_URL')
+    MAX_QUEUE_SIZE = 10
 
     def __init__(self, url):
         self.url = url
@@ -23,7 +24,7 @@ class SQS:
         self.client.send_message(QueueUrl=self.url, MessageBody=body_message)
 
     def receive(self, num_messages=1):
-        num_messages = num_messages % (settings.MAX_QUEUE_SIZE + 1)
+        num_messages = num_messages % self.MAX_QUEUE_SIZE + 1
         response = self.client.receive_message(QueueUrl=self.url, MaxNumberOfMessages=num_messages)
         messages = response.get('Messages')
         if messages:
