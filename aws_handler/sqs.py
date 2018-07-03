@@ -13,9 +13,6 @@ class SQS:
         self.client = boto3.client('sqs', region_name='ap-northeast-1')
         self.messages = []
 
-    def create_queue(self, queue_name):
-        return self.client.create_queue(QueueName=queue_name)
-
     @classmethod
     def sample(cls):
         return cls(cls.URL)
