@@ -47,8 +47,7 @@ class SQS:
 
 def sqs_example():
     sqs = SQS.sample()
-    print(sqs.create_queue("test3"))
-    # y = []
-    # for i in range(3):
-    #     y.append(sqs.receive(10))
-    # print(y)
+    y = []
+    for i in range(3):
+        y.append(sqs.receive(10))
+    print(y)
