@@ -71,6 +71,8 @@ class SubQueue:
 
 
 if __name__ == '__main__':
-    sub_queue = SubQueue.create("test", "test4")
-    sub_queue.set_subscription_attributes("price")
-    sub_queue.set_queue_attributes()
+    model_names = ["queue_a", "queue_b", "queue_c"]
+    for name in model_names:
+        sub_queue = SubQueue.create(name, "model")
+        sub_queue.set_subscription_attributes(name)
+        sub_queue.set_queue_attributes()
