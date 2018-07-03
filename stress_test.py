@@ -4,11 +4,11 @@
 # import the necessary packages
 from threading import Thread
 import requests
+import settings
 import time
 
 # initialize the Keras REST API endpoint URL along with the input
 # image path
-KERAS_REST_API_URL = "http://localhost:5000/predict"
 IMAGE_PATH = "beagle.png"
 
 # initialize the number of requests for the stress test along with
@@ -24,7 +24,7 @@ def call_predict_endpoint(n):
         payload = {"image": image}
 
     # submit the request
-    r = requests.post(KERAS_REST_API_URL, files=payload).json()
+    r = requests.post(settings.KERAS_REST_API_URL, files=payload).json()
 
     # ensure the request was successful
     if r["success"]:
