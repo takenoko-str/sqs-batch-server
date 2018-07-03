@@ -18,7 +18,9 @@ class SubQueue:
         self.subscription_arn = subscription_arn
 
     @classmethod
-    def create(cls, queue_name, topic_arn):
+    def create(cls, queue_name, topic_name):
+        topic_arn = cls.sns.create_topic(
+            Name=topic_name)['TopicArn']
 
         queue_url = cls.sqs.create_queue(
             QueueName=queue_name)["QueueUrl"]
@@ -69,7 +71,6 @@ class SubQueue:
 
 
 if __name__ == '__main__':
-
-    sub_queue = SubQueue.create("test", os.environ["SNS_TOPIC_ARN"])
+    sub_queue = SubQueue.create("test", "test4")
     sub_queue.set_subscription_attributes("price")
     sub_queue.set_queue_attributes()
