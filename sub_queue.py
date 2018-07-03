@@ -2,9 +2,11 @@
 
 import json
 import boto3
+from os import environ as env
 from settings import *
 
-session = boto3.session.Session(region_name='ap-northeast-1')
+default_region = env.get('AWS_DEFAULT_REGION', 'ap-northeast-1')
+session = boto3.session.Session(region_name=default_region)
 
 
 class SubQueue:
@@ -20,7 +22,7 @@ class SubQueue:
     @classmethod
     def create(cls, queue_name, topic_name):
         topic_arn = cls.sns.create_topic(
-            Name=topic_name)['TopicArn']
+            Name=topic_name)["TopicArn"]
 
         queue_url = cls.sqs.create_queue(
             QueueName=queue_name)["QueueUrl"]
