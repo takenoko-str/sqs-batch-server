@@ -38,10 +38,11 @@ class SubQueue:
         return cls(topic_arn, queue_url, queue_arn, subscription_arn)
 
     def set_subscription_attributes(self, model_name):
+        attribute_value = {"model": [model_name]}
         self.sns.set_subscription_attributes(
             SubscriptionArn=self.subscription_arn,
             AttributeName='FilterPolicy',
-            AttributeValue='{"model": ["' + model_name + '"]}'
+            AttributeValue=json.dumps(attribute_value)
         )
 
     def set_queue_attributes(self):
