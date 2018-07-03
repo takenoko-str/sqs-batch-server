@@ -15,13 +15,6 @@ class SNS:
     def sample(cls):
         return cls(cls.TOPIC_ARN)
 
-    def set_subscription(self, subscription_arn, model_name):
-        self.client.set_subscription_attributes(
-            SubscriptionArn=subscription_arn,
-            AttributeName='FilterPolicy',
-            AttributeValue='{"model": ["' + model_name + '"]}'
-        )
-
     def publish(self, message, model_name):
         subject = 'Test #1234'
         message_attributes = {'model': {
