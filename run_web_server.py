@@ -18,9 +18,8 @@ app = flask.Flask(__name__)
 db = redis.StrictRedis(host=settings.REDIS_HOST,
                        port=settings.REDIS_PORT, 
                        db=settings.REDIS_DB)
-s3 = S3.sample()
-sqs = SQS.sample()
-sns = SNS.sample()
+s3 = S3(settings.S3_BUCKET)
+sns = SNS(settings.SNS_TOPIC_ARN)
 
 
 def prepare_image(image, target):

@@ -13,8 +13,9 @@ from aws_handler import SQS, S3
 db = redis.StrictRedis(host=settings.REDIS_HOST,
                        port=settings.REDIS_PORT, 
                        db=settings.REDIS_DB)
-sqs = SQS.sample()
-s3 = S3.sample()
+s3 = S3(settings.S3_BUCKET)
+sqs = SQS(settings.SQS_URL)
+
 
 
 def classify_process():
