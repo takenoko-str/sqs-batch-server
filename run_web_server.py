@@ -40,8 +40,8 @@ def homepage():
     return "Welcome to the PyImageSearch Keras REST API!"
 
 
-@app.route("/predict", methods=["POST"])
-def predict():
+@app.route("/predict/<name>", methods=["POST"])
+def predict(name):
     data = {"success": False}
 
     if flask.request.method == "POST":
@@ -66,7 +66,7 @@ def predict():
             s3_path = op.join(today, imageID)
             s3.put(s3_path, json.dumps(d))
             # sqs.send(imageID)
-            sns.publish(s3_path, "imagenet")
+            sns.publish(s3_path, name)
 
             while True:
                 # output = s3.get(imageID)
