@@ -9,13 +9,11 @@ import time
 import json
 from aws_handler import SQS, S3
 
-
 db = redis.StrictRedis(host=settings.REDIS_HOST,
                        port=settings.REDIS_PORT, 
                        db=settings.REDIS_DB)
 s3 = S3(settings.S3_BUCKET)
 sqs = SQS(settings.SQS_URL)
-
 
 
 def classify_process():
