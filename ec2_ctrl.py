@@ -13,13 +13,13 @@ if __name__ == '__main__':
 
         if int(msg) > 0:
             try:
-                response = ec2.start()
+                response = ec2.start(1)
             except botocore.exceptions.ClientError:
                 print("error")
 
         if int(msg) == 0:
             try:
-                response = ec2.stop()
+                response = ec2.stop(1)
             except botocore.exceptions.ClientError:
                 print("error")
         time.sleep(5)
