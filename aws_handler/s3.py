@@ -2,6 +2,8 @@
 
 import os
 import boto3
+import os.path as op
+from datetime import date
 
 
 class S3:
@@ -26,6 +28,11 @@ class S3:
 
     def get(self, key):
         return self.client.get_object(Bucket=self.bucket, Key=key)['Body'].read()
+
+    @classmethod
+    def create_folder_with_timestamp(cls, path):
+        today = str(date.today())
+        return op.join(today, path)
 
 
 def s3_example(key):

@@ -1,7 +1,7 @@
 from keras.preprocessing.image import img_to_array
 from keras.applications import imagenet_utils
 from PIL import Image
-from aws_handler import S3, SQS, SNS
+from aws_handler import S3, SNS
 import numpy as np
 import settings
 import helpers
@@ -11,8 +11,6 @@ import uuid
 import time
 import json
 import io
-import os.path as op
-from datetime import date
 
 app = flask.Flask(__name__)
 db = redis.StrictRedis(host=settings.REDIS_HOST,
@@ -61,8 +59,7 @@ def predict(name):
             d = {"id": imageID, "image": image}
 
             # db.rpush(settings.IMAGE_QUEUE, json.dumps(d))
-            today = str(date.today())
-            s3_path = op.join(today, imageID)
+            s3_path = s3.create_folder_with_timestamp(imageID)
             s3.put(s3_path, json.dumps(d))
             # sqs.send(imageID)
             sns.publish(s3_path, name)
