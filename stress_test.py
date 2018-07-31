@@ -18,7 +18,7 @@ def call_predict_endpoint(n):
     with open(IMAGE_PATH, "rb") as f:
         image = f.read()
         payload = {"image": image}
-    print("[INFO] thread start")
+    print("[INFO] thread {} GO".format(n))
 
     r = requests.post(settings.KERAS_REST_API_URL, files=payload).json()
 
