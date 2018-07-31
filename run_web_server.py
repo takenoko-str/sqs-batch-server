@@ -65,7 +65,6 @@ def predict(name):
             sns.publish(s3_path, name)
 
             while True:
-                # output = s3.get(imageID)
                 output = db.get(imageID)
 
                 if output is not None:
