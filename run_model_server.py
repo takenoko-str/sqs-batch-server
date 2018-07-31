@@ -24,54 +24,54 @@ def classify_process():
     while True:
         
         messages = sqs.receive()
-        queue = []
+        images = []
         if not messages:
             continue
 
         for msg in messages:
             body = json.loads(msg['Body'])
             s3_path = body['Message']
-            q = s3.get(s3_path)
-            queue.append(q)
+            img = s3.get(s3_path)
+            images.append(img)
 
-        # queue = db.lrange(settings.IMAGE_QUEUE, 0,
-        #                   settings.BATCH_SIZE - 1)
+        # images = db.lrange(settings.IMAGE_QUEUE, 0,
+        #                    settings.BATCH_SIZE - 1)
         
-        imageIDs = []
-        batch = None
+        image_ids = []
+        image_batch = None
 
-        for q in queue:
+        for img in images:
 
-            q = json.loads(q.decode("utf-8"))
-            image = helpers.base64_decode_image(q["image"],
+            img = json.loads(img.decode("utf-8"))
+            image = helpers.base64_decode_image(img["image"],
                                                 settings.IMAGE_DTYPE,
                                                 (1, settings.IMAGE_HEIGHT, 
                                                     settings.IMAGE_WIDTH,
                                                     settings.IMAGE_CHANS))
 
-            if batch is None:
-                batch = image
+            if image_batch is None:
+                image_batch = image
 
             else:
-                batch = np.vstack([batch, image])
+                image_batch = np.vstack([image_batch, image])
 
-            imageIDs.append(q["id"])
+            image_ids.append(img["id"])
 
-        if len(imageIDs) > 0:
+        if len(image_ids) > 0:
 
-            print("* Batch size: {}".format(batch.shape))
-            preds = model.predict(batch)
-            results = imagenet_utils.decode_predictions(preds)
+            print("* Batch size: {}".format(image_batch.shape))
+            predicts = model.predict(image_batch)
+            results = imagenet_utils.decode_predictions(predicts)
 
-            for (imageID, resultSet) in zip(imageIDs, results):
+            for (image_id, result_set) in zip(image_ids, results):
 
                 output = []
 
-                for (imagenetID, label, prob) in resultSet:
+                for _, label, prob in result_set:
                     r = {"label": label, "probability": float(prob)}
                     output.append(r)
 
-                db.set(imageID, json.dumps(output))
+                db.set(image_id, json.dumps(output))
 
             # db.ltrim(settings.IMAGE_QUEUE, len(imageIDs), -1)
         sqs.delete(messages)
