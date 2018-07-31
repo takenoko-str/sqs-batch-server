@@ -23,7 +23,7 @@ def classify_process():
 
     while True:
         
-        messages = sqs.receive(10)
+        messages = sqs.receive()
         queue = []
         if not messages:
             continue

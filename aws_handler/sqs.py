@@ -20,8 +20,7 @@ class SQS:
     def send(self, body_message):
         self.client.send_message(QueueUrl=self.url, MessageBody=body_message)
 
-    def receive(self, num_messages=1):
-        num_messages = num_messages % self.MAX_QUEUE_SIZE + 1
+    def receive(self, num_messages=10):
         response = self.client.receive_message(QueueUrl=self.url, MaxNumberOfMessages=num_messages)
         messages = response.get('Messages')
         if messages:
